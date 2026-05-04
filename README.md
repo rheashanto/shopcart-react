@@ -1,4 +1,4 @@
-# ÉCLAT — Shopping Cart
+WebYes — Shopping Cart
 
 A polished React shopping cart app built as part of The Odin Project curriculum.
 
