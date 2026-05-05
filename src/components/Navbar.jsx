@@ -1,0 +1,108 @@
+import { useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import CartDrawer from './CartDrawer'
+
+const Navbar = () => {
+  const { totalItems } = useCart()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [searchVal, setSearchVal] = useState('')
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchVal.trim()) {
+      navigate(`/shop?q=${encodeURIComponent(searchVal.trim())}`)
+      setSearchVal('')
+    }
+  }
+
+  return (
+    <>
+      <nav className="navbar" role="navigation" aria-label="Main navigation">
+        <div className="navbar__inner">
+          <NavLink to="/" className="navbar__brand">WebYes Shop</NavLink>
+
+          <ul className="navbar__links">
+            {[{ path: '/', label: 'Home' }, { path: '/shop', label: 'Shop' }].map(({ path, label }) => (
+              <li key={path}>
+                <NavLink to={path} end={path === '/'}
+                  className={({ isActive }) => 'navbar__link' + (isActive ? ' active' : '')}>
+                  {label}
+                </NavLink>
+              </li>
+            ))}
+            {[
+              { label: 'Men',        param: 'men' },
+              { label: 'Women',      param: 'women' },
+              { label: 'Accessories', param: 'accessories' },
+              { label: 'Shoes',      param: 'electronics' },
+            ].map(({ label, param }) => (
+              <li key={label}>
+                <NavLink to={`/shop?category=${param}`} className="navbar__link">{label}</NavLink>
+              </li>
+            ))}
+          </ul>
+
+          {/* Fix 4: search is now wired — submits to /shop?q= */}
+          <form className="navbar__search" onSubmit={handleSearch} role="search">
+            <span className="navbar__search-icon">🔍</span>
+            <input
+              type="search"
+              className="navbar__search-input"
+              placeholder="Search products..."
+              aria-label="Search products"
+              value={searchVal}
+              onChange={(e) => setSearchVal(e.target.value)}
+            />
+          </form>
+
+          <div className="navbar__actions">
+            {user ? (
+              <div className="navbar__user">
+                <span className="navbar__icon-btn" aria-label="Account">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                  </svg>
+                </span>
+                <span className="navbar__user-name">Hi, {user.name.split(' ')[0]}</span>
+                <button className="navbar__logout" onClick={handleLogout}>Log out</button>
+              </div>
+            ) : (
+              <NavLink to="/login" className="navbar__icon-btn" aria-label="Sign in">
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+                  <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                </svg>
+              </NavLink>
+            )}
+
+            <button className="navbar__icon-btn" onClick={() => setDrawerOpen(true)}
+              aria-label={`Cart, ${totalItems} items`}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 01-8 0"/>
+              </svg>
+              {totalItems > 0 && (
+                <span className="cart-badge__count" data-testid="cart-count">
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <CartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    </>
+  )
+}
+
+export default Navbar
